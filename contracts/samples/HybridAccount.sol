@@ -12,20 +12,26 @@ import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "../core/BaseAccount.sol";
 import "./callback/TokenCallbackHandler.sol";
 
+interface IHCHelper {
+  function TryCallOffchain(bytes32, bytes memory) external returns (uint32, bytes memory);
+}
 /**
   * minimal account.
   *  this is sample minimal account.
   *  has execute, eth handling methods
   *  has a single signer that can send requests through the entryPoint.
   */
-contract SimpleAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
+contract HybridAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, Initializable {
     using ECDSA for bytes32;
+
+    mapping(address=>bool) public PermittedCallers;
 
     address public owner;
 
     IEntryPoint private immutable _entryPoint;
+    address public _helperAddr;
 
-    event SimpleAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
+    event HybridAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
 
     modifier onlyOwner() {
         _onlyOwner();
@@ -34,15 +40,17 @@ contract SimpleAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, In
 
     /// @inheritdoc BaseAccount
     function entryPoint() public view virtual override returns (IEntryPoint) {
-        return _entryPoint;
+        require(2>1, "foo");
+	return _entryPoint;
     }
 
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    constructor(IEntryPoint anEntryPoint) {
+    constructor(IEntryPoint anEntryPoint, address helperAddr) {
         _entryPoint = anEntryPoint;
+	_helperAddr = helperAddr;
         _disableInitializers();
     }
 
@@ -72,7 +80,7 @@ contract SimpleAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, In
 
     /**
      * @dev The _entryPoint member is immutable, to reduce gas consumption.  To upgrade EntryPoint,
-     * a new implementation of SimpleAccount must be deployed with the new EntryPoint address, then upgrading
+     * a new implementation of HybridAccount must be deployed with the new EntryPoint address, then upgrading
       * the implementation by calling `upgradeTo()`
      */
     function initialize(address anOwner) public virtual /*initializer*/ {
@@ -81,7 +89,7 @@ contract SimpleAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, In
 
     function _initialize(address anOwner) internal virtual {
         owner = anOwner;
-        emit SimpleAccountInitialized(_entryPoint, owner);
+        emit HybridAccountInitialized(_entryPoint, owner);
     }
 
     // Require the function call went through EntryPoint or owner
@@ -134,5 +142,20 @@ contract SimpleAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, In
         (newImplementation);
         _onlyOwner();
     }
-}
 
+    function PermitCaller(address caller, bool allowed) public {
+      _requireFromEntryPointOrOwner();
+      PermittedCallers[caller] = allowed;
+    }
+
+    function CallOffchain(bytes32 userKey, bytes memory req) public returns (uint32, bytes memory) {
+       /* By default a simple whitelist is used. Endpoint implementations may choose to allow
+          unrestricted access, to use a custom permission model, to charge fees, etc. */
+       require(_helperAddr != address(0), "Helper address not set");
+       require(PermittedCallers[msg.sender], "Permission denied");
+       IHCHelper HC = IHCHelper(_helperAddr);
+
+       userKey = keccak256(abi.encodePacked(userKey, msg.sender));
+       return HC.TryCallOffchain(userKey, req);
+    }
+}
