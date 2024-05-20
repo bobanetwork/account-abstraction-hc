@@ -23,7 +23,10 @@ contract TestCounter {
        HybridAccount HA = HybridAccount(payable(ha_addr));
        uint256 x;
        uint256 y;
-
+       if (b == 0) {
+           counters[msg.sender] = counters[msg.sender] + a;
+	   return;
+       }
        bytes memory req = abi.encodeWithSignature("addsub2(uint32,uint32)", a, b);
        bytes32 userKey = bytes32(abi.encode(msg.sender));
        (uint32 error, bytes memory ret) = HA.CallOffchain(userKey, req);
