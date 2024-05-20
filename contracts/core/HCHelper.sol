@@ -100,8 +100,8 @@ contract HCHelper {
     }
 
     // Remove one or more map entries (only needed if response was not retrieved normally).
-    function RemoveResponse(bytes32[] calldata mapKeys) public {
-        require(msg.sender == owner, "Only owner");
+    function RemoveResponses(bytes32[] calldata mapKeys) public {
+        //require(msg.sender == owner, "Only owner");
 	for (uint32 i = 0; i < mapKeys.length; i++) {
 	    delete(ResponseCache[mapKeys[i]]);
 	}
