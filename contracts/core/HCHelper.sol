@@ -10,12 +10,12 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract HCHelper {
     using SafeERC20 for IERC20;
 
-    // Owner (creator) of this contract.
-    address public owner;
-
     // Response data is stored here by PutResponse() and then consumed by TryCallOffchain().
     // The storage slot must not be changed unless the corresponding code is updated in the Bundler.
     mapping(bytes32=>bytes)  ResponseCache;
+
+    // Owner (creator) of this contract.
+    address public owner;
 
     // BOBA token address
     address public tokenAddr;
@@ -40,7 +40,6 @@ contract HCHelper {
     address immutable entryPoint;
 
     constructor(address _entryPoint, address _tokenAddr, uint256 _pricePerCall) {
-        owner = msg.sender;
 	entryPoint = _entryPoint;
 	tokenAddr = _tokenAddr;
 	pricePerCall = _pricePerCall;
@@ -50,6 +49,11 @@ contract HCHelper {
         // Temporary method, until an auto-registration protocol is developed
         RegisteredCallers[contract_addr].owner = msg.sender;
         RegisteredCallers[contract_addr].url = url;
+    }
+
+    function initialize(address _owner) public {
+        require(msg.sender == owner || address(0) == owner, "Only owner");
+        owner = _owner;
     }
 
     function SetSystemAccount(address _systemAccount) public {
@@ -101,7 +105,7 @@ contract HCHelper {
 
     // Remove one or more map entries (only needed if response was not retrieved normally).
     function RemoveResponses(bytes32[] calldata mapKeys) public {
-        //require(msg.sender == owner, "Only owner");
+        require(msg.sender == systemAccount, "Only systemAccount may call RemoveResponses");
 	for (uint32 i = 0; i < mapKeys.length; i++) {
 	    delete(ResponseCache[mapKeys[i]]);
 	}
