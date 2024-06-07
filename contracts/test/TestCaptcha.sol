@@ -33,7 +33,7 @@ contract TestCaptcha is Ownable {
         emit Withdraw(msg.sender, _nativeAmount);
     }
 
-    function verifycaptcha(
+    function verifyCaptcha(
         address _to,
         bytes32 _uuid,
         string memory _key
