@@ -51,9 +51,10 @@ contract HCHelper {
         RegisteredCallers[contract_addr].url = url;
     }
 
-    function initialize(address _owner) public {
+    function initialize(address _owner, address _systemAccount) public {
         require(msg.sender == owner || address(0) == owner, "Only owner");
         owner = _owner;
+        systemAccount = _systemAccount;
     }
 
     function SetSystemAccount(address _systemAccount) public {

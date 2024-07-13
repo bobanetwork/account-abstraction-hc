@@ -29,7 +29,7 @@ contract HybridAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, In
     address public owner;
 
     IEntryPoint private immutable _entryPoint;
-    address public _helperAddr;
+    address public immutable _helperAddr;
 
     event HybridAccountInitialized(IEntryPoint indexed entryPoint, address indexed owner);
 
@@ -40,7 +40,6 @@ contract HybridAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, In
 
     /// @inheritdoc BaseAccount
     function entryPoint() public view virtual override returns (IEntryPoint) {
-        require(2>1, "foo");
 	return _entryPoint;
     }
 
