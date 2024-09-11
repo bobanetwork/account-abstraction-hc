@@ -7,6 +7,8 @@ contract TestTokenPrice {
     mapping(uint256 => uint256) public counters;
     address payable immutable helperAddr;
 
+    event PriceQuote(string, string);
+
     constructor(address payable _helperAddr) {
         helperAddr = _helperAddr;
         counters[0] = 100;
@@ -27,6 +29,7 @@ contract TestTokenPrice {
         }
 
         (price) = abi.decode(ret, (string));
+        emit PriceQuote(token, price);
         return price;
     }
 }
