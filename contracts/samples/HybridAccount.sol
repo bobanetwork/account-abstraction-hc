@@ -82,7 +82,7 @@ contract HybridAccount is BaseAccount, TokenCallbackHandler, UUPSUpgradeable, In
      * a new implementation of HybridAccount must be deployed with the new EntryPoint address, then upgrading
       * the implementation by calling `upgradeTo()`
      */
-    function initialize(address anOwner) public virtual /*initializer*/ {
+    function initialize(address anOwner) public virtual initializer {
         _initialize(anOwner);
     }
 
